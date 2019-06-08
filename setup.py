@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
 
-from papis_dmenu import __version__
-
 with open('README.rst') as fd:
     long_description = fd.read()
 
 setup(
     name='papis-libgen',
-    version=__version__,
+    version='0.1.0',
     author='Alejandro Gallo',
     author_email='aamsgallo@gmail.com',
     license='GPLv3',
@@ -17,7 +15,7 @@ setup(
         "papis>=0.9",
         # TODO: check if later versions also work,
         #       version 2.0 only works for py 3.6 and above
-        "pylibgen==1.3.0",
+        "pylibgen==1.3.1",
     ],
     classifiers=[],
     description='Libgen plugin for papis',
@@ -32,7 +30,7 @@ setup(
         ]
     ),
     keywords=[
-        'papis', 'dmenu', 'bibtex',
+        'papis', 'libgen', 'bibtex',
         'management', 'cli', 'biliography'
     ],
     packages=[
