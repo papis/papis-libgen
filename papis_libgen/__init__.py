@@ -45,10 +45,12 @@ def explorer(ctx, author, title, isbn):
     logger.info('{} documents found'.format(len(docs)))
 
 
-class Downloader(papis.downloaders.base.Downloader):
+class Downloader(papis.downloaders.Downloader):
 
     def __init__(self, url):
-        papis.downloaders.base.Downloader.__init__(self, url, name="libgen")
+        papis.downloaders.Downloader.__init__(self, url, name="libgen")
+        self.logger = logging.getLogger('downloader:libgen')
+        self._doc_url = None
 
     @classmethod
     def match(cls, url):
@@ -59,17 +61,37 @@ class Downloader(papis.downloaders.base.Downloader):
             return False
 
     def get_md5(self):
-        return re.match(r'.*md5=([A-Z0-9]+).*', self.get_url()).group(1)
+        m = re.match(r'.*md5=([A-Z0-9]+).*', self.uri)
+        if m:
+            md5 = m.group(1)
+            self.logger.debug("got md5 %s", md5)
+            return md5
 
-    def download_bibtex(self):
-        url = 'http://libgen.io/ads.php?md5=%s' % self.get_md5()
-        raw_data = (
-            urllib.request.urlopen(url)
-            .read()
-            .decode('utf-8')
-        )
+    def _get_raw_data(self):
+        url = 'https://libgen.rocks/ads.php?md5=%s' % self.get_md5()
+        self.logger.debug("got url %s", url)
+        raw_data = (self.session.get(url)
+                    .content
+                    .decode('utf-8'))
+        return raw_data
+
+    def get_document_url(self):
+        if self._doc_url:
+            return self._doc_url
+        raw_data = self._get_raw_data()
+        soup = bs4.BeautifulSoup(raw_data, "html.parser")
+        a_list = soup.find_all("a")
+        for a in a_list:
+            for s in a.stripped_strings:
+                if re.match("GET", s):
+                    self._doc_url = "https://libgen.rocks/{}".format(a["href"])
+                    self.logger.info("got doc url %s", self._doc_url)
+                    return a._doc_url
+
+    def download_bibtex(self) -> None:
+        raw_data = self._get_raw_data()
         soup = bs4.BeautifulSoup(raw_data, "html.parser")
         textareas = soup.find_all("textarea")
         if not textareas:
-            return False
+            return
         self.bibtex_data = textareas[0].text

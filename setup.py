@@ -12,7 +12,7 @@ setup(
     license='GPLv3',
     url='https://github.com/papis/papis-libgen',
     install_requires=[
-        "papis>=0.9",
+        "papis>=0.12",
         # TODO: check if later versions also work,
         #       version 2.0 only works for py 3.6 and above
         "pylibgen==1.3.1",
